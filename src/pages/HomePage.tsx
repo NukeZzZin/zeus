@@ -14,13 +14,9 @@ const HomePage = () => {
       setError(null);
       const result = await routes.posts.list();
       setLoading(false);
-      if (result.success && Array.isArray(result.data)) {
-        setPosts(result.data);
-      } else if (result.success && !Array.isArray(result.data)) {
-        setPosts([]);
-      } else {
-        setError(result.success ? "Unknown error" : result.errors.map(event => event.message).join(" "));
-      }
+      if (result.success && Array.isArray(result.data)) setPosts(result.data);
+      else if (result.success && !Array.isArray(result.data)) setPosts([]);
+      else setError(result.success ? "Unknown error" : result.errors.map(event => event.message).join(" "));
     };
     fetchPosts();
   }, []);
