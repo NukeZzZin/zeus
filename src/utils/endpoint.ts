@@ -23,11 +23,6 @@ export const endpoint = axios.create({
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig { _retry?: boolean }
 
-const applyAccessToken = (config: InternalAxiosRequestConfig) => {
-  const { accessToken } = useAuthStore.getState();
-  if (accessToken && config.headers) config.headers.Authorization = `Bearer ${accessToken}`;
-};
-
 const executeRefresh = async (refreshToken: string): Promise<void> => {
   const { setTokenTuple, clearTokenTuple } = useAuthStore.getState();
   const result = await routes.session.refresh(refreshToken);
@@ -39,23 +34,23 @@ const executeRefresh = async (refreshToken: string): Promise<void> => {
   }
 };
 
-
 let proactiveRefreshPromise: Promise<void> | null = null;
 
 endpoint.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  const { accessToken, refreshToken, accessTokenExpiresAt, clearTokenTuple } = useAuthStore.getState();
-
-  if (accessToken && refreshToken && accessTokenExpiresAt && accessTokenExpiresAt - Date.now() < 60_000) {
-    proactiveRefreshPromise ??= executeRefresh(refreshToken).finally(() => proactiveRefreshPromise = null);
-
+  const { refreshToken, accessTokenExpiresAt, clearTokenTuple } = useAuthStore.getState();
+  if (!!refreshToken && accessTokenExpiresAt !== null && accessTokenExpiresAt - Date.now() < 60_000) {
+    if (!proactiveRefreshPromise) {
+      proactiveRefreshPromise = executeRefresh(refreshToken).finally(() => {
+        proactiveRefreshPromise = null;
+      });
+    }
     try { await proactiveRefreshPromise }
     catch { clearTokenTuple() }
   }
-
-  applyAccessToken(config);
+  const { accessToken } = useAuthStore.getState();
+  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
   return config;
 });
-
 let reactiveRefreshPromise: Promise<void> | null = null;
 
 endpoint.interceptors.response.use(
