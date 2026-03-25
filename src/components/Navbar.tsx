@@ -1,22 +1,21 @@
 import React from "react";
 import { AppBar, Toolbar, Typography, Box, Button } from "@mui/material";
 import { Link } from "react-router";
-import useAuthStore from "@stores/auth_store";
+
+import { useIsLoggedIn } from "@stores/auth_store";
 
 const Navbar = () => {
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
-  const clearTokenTuple = useAuthStore((state) => state.clearTokenTuple);
-
+  const isLoggedIn = useIsLoggedIn();
   return (
     <AppBar className="select-none" position="static" color="primary">
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Typography variant="h6">portfólio • prometheus</Typography>
+        <Typography fontFamily="bold" variant="h6">portfólio • prometheus</Typography>
         <Box>
           <Button color="inherit" component={Link} to="/">Home</Button>
           {isLoggedIn && (
             <React.Fragment>
               <Button color="inherit" component={Link} to="/create">Create</Button>
-              <Button color="inherit" onClick={clearTokenTuple}>Logout</Button>
+              <Button color="inherit" component={Link} to="/logout">Logout</Button>
             </React.Fragment>
           )}
           {!isLoggedIn && (
