@@ -16,60 +16,74 @@ export type SessionResultType = { access_token: string; refresh_token: string };
 export type PostResultType = { post_id: string; title: string; content: string; author_id: string };
 
 export const endpoint = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
+  baseURL: `${import.meta.env.VITE_API_URL}/api` || "http://localhost:4000/api",
   headers: { "Content-Type": "application/json" },
   timeout: 15_000
 })
 
-endpoint.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const state = useAuthStore.getState();
-  if (state.accessToken && config.headers) config.headers.Authorization = `Bearer ${state.accessToken}`;
-  return config;
-})
-
 interface RetryableRequestConfig extends InternalAxiosRequestConfig { _retry?: boolean }
 
+const applyAccessToken = (config: InternalAxiosRequestConfig) => {
+  const { accessToken } = useAuthStore.getState();
+  if (accessToken && config.headers) config.headers.Authorization = `Bearer ${accessToken}`;
+};
+
+const executeRefresh = async (refreshToken: string): Promise<void> => {
+  const { setTokenTuple, clearTokenTuple } = useAuthStore.getState();
+  const result = await routes.session.refresh(refreshToken);
+  if (result.success && result.data) {
+    setTokenTuple(result.data.access_token, result.data.refresh_token);
+  } else {
+    clearTokenTuple();
+    throw new Error("Refresh failed");
+  }
+};
+
+
 let proactiveRefreshPromise: Promise<void> | null = null;
+
 endpoint.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   const state = useAuthStore.getState();
-  if (state.accessToken && state.refreshToken && state.accessTokenExpiresAt && state.accessTokenExpiresAt - Date.now() < 60_000) {
-    proactiveRefreshPromise ??= (async () => {
-      const { refreshToken, setTokenTuple, clearTokenTuple } = useAuthStore.getState();
-      if (!refreshToken) throw new Error("No refresh token available");
-      const result = await routes.session.refresh(refreshToken);
-      result.success && result.data ? setTokenTuple(result.data.access_token, result.data.refresh_token) : clearTokenTuple();
-    })().finally(() => proactiveRefreshPromise = null);
 
-    try { await proactiveRefreshPromise }
-    catch { /* Se falhar, segue sem token (vai cair no 401 depois) */ }
+  if (state.accessToken && state.refreshToken && state.accessTokenExpiresAt && state.accessTokenExpiresAt - Date.now() < 60_000) {
+    proactiveRefreshPromise ??= executeRefresh(state.refreshToken)
+      .finally(() => { proactiveRefreshPromise = null; });
+
+    try { await proactiveRefreshPromise; }
+    catch { /* Se falhar, segue sem token (vai cair no 401 no response interceptor) */ }
   }
 
-  const updatedState = useAuthStore.getState();
-  if (updatedState.accessToken && config.headers) config.headers.Authorization = `Bearer ${updatedState.accessToken}`;
+  applyAccessToken(config);
   return config;
 });
 
 let reactiveRefreshPromise: Promise<void> | null = null;
-endpoint.interceptors.response.use((response) => response, async (error) => {
-  const original_request = error.config as RetryableRequestConfig;
 
-  if (!axios.isAxiosError(error) || error.response?.status !== 401 || original_request._retry) return Promise.reject(error);
-  original_request._retry = true;
+endpoint.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config as RetryableRequestConfig;
 
-  reactiveRefreshPromise ??= (async () => {
-    const { refreshToken, setTokenTuple, clearTokenTuple } = useAuthStore.getState();
-    if (!refreshToken) throw new Error("No refresh token available");
-    const result = await routes.session.refresh(refreshToken);
-    result.success && result.data ? setTokenTuple(result.data.access_token, result.data.refresh_token) : clearTokenTuple();
-  })().finally(() => reactiveRefreshPromise = null);
+    if (!axios.isAxiosError(error) || error.response?.status !== 401 || originalRequest._retry) return Promise.reject(error);
 
-  try { await reactiveRefreshPromise }
-  catch { return Promise.reject(error) }
+    originalRequest._retry = true;
 
-  const { accessToken } = useAuthStore.getState();
-  if (accessToken) original_request.headers.Authorization = `Bearer ${accessToken}`;
-  return endpoint(original_request);
-});
+    const { refreshToken } = useAuthStore.getState();
+    if (!refreshToken) return Promise.reject(error);
+
+    reactiveRefreshPromise ??= executeRefresh(refreshToken)
+      .finally(() => { reactiveRefreshPromise = null; });
+
+    try { await reactiveRefreshPromise; }
+    catch { return Promise.reject(error); }
+
+    const { accessToken } = useAuthStore.getState();
+    if (!accessToken) return Promise.reject(error);
+
+    originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+    return endpoint(originalRequest);
+  }
+);
 
 const unwrap = async <T>(promise: Promise<any>): Promise<EndpointResult<T>> => {
   try {
@@ -86,7 +100,7 @@ const unwrap = async <T>(promise: Promise<any>): Promise<EndpointResult<T>> => {
     }
     return { success: false, errors: [{ code: 500, message: "Internal server error" }] } as EndpointResult<T>;
   }
-}
+};
 
 export const routes = {
   auth: {
@@ -95,8 +109,8 @@ export const routes = {
   },
 
   session: {
-    refresh: (refresh_token: string) => unwrap<SessionResultType>(endpoint.post("/v1/session/refresh", { refresh_token: refresh_token })),
-    logout: (refresh_token: string) => unwrap<string>(endpoint.post("/v1/session/logout", { refresh_token: refresh_token }))
+    refresh: (refresh_token: string) => unwrap<SessionResultType>(endpoint.post("/v1/session/refresh", { refresh_token })),
+    logout: (refresh_token: string) => unwrap<string>(endpoint.post("/v1/session/logout", { refresh_token }))
   },
 
   posts: {
