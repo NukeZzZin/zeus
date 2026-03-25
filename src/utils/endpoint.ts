@@ -34,23 +34,25 @@ const executeRefresh = async (refreshToken: string): Promise<void> => {
   }
 };
 
-let proactiveRefreshPromise: Promise<void> | null = null;
+// TODO: fix deadlock proactiveRefresh.
+// let proactiveRefreshPromise: Promise<void> | null = null;
 
-endpoint.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  const { refreshToken, accessTokenExpiresAt, clearTokenTuple } = useAuthStore.getState();
-  if (!!refreshToken && accessTokenExpiresAt !== null && accessTokenExpiresAt - Date.now() < 60_000) {
-    if (!proactiveRefreshPromise) {
-      proactiveRefreshPromise = executeRefresh(refreshToken).finally(() => {
-        proactiveRefreshPromise = null;
-      });
-    }
-    try { await proactiveRefreshPromise }
-    catch { clearTokenTuple() }
-  }
-  const { accessToken } = useAuthStore.getState();
-  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
-  return config;
-});
+// endpoint.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+//   const { refreshToken, accessTokenExpiresAt, clearTokenTuple } = useAuthStore.getState();
+//   if (!!refreshToken && accessTokenExpiresAt !== null && accessTokenExpiresAt - Date.now() < 60_000) {
+//     if (!proactiveRefreshPromise) {
+//       proactiveRefreshPromise = executeRefresh(refreshToken).finally(() => {
+//         proactiveRefreshPromise = null;
+//       });
+//     }
+//     try { await proactiveRefreshPromise }
+//     catch { clearTokenTuple() }
+//   }
+//   const { accessToken } = useAuthStore.getState();
+//   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+//   return config;
+// });
+
 let reactiveRefreshPromise: Promise<void> | null = null;
 
 endpoint.interceptors.response.use(
