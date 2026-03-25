@@ -43,14 +43,13 @@ const executeRefresh = async (refreshToken: string): Promise<void> => {
 let proactiveRefreshPromise: Promise<void> | null = null;
 
 endpoint.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  const state = useAuthStore.getState();
+  const { accessToken, refreshToken, accessTokenExpiresAt, clearTokenTuple } = useAuthStore.getState();
 
-  if (state.accessToken && state.refreshToken && state.accessTokenExpiresAt && state.accessTokenExpiresAt - Date.now() < 60_000) {
-    proactiveRefreshPromise ??= executeRefresh(state.refreshToken)
-      .finally(() => { proactiveRefreshPromise = null; });
+  if (accessToken && refreshToken && accessTokenExpiresAt && accessTokenExpiresAt - Date.now() < 60_000) {
+    proactiveRefreshPromise ??= executeRefresh(refreshToken).finally(() => proactiveRefreshPromise = null);
 
-    try { await proactiveRefreshPromise; }
-    catch { /* Se falhar, segue sem token (vai cair no 401 no response interceptor) */ }
+    try { await proactiveRefreshPromise }
+    catch { clearTokenTuple() }
   }
 
   applyAccessToken(config);
@@ -64,21 +63,34 @@ endpoint.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config as RetryableRequestConfig;
 
-    if (!axios.isAxiosError(error) || error.response?.status !== 401 || originalRequest._retry) return Promise.reject(error);
+    if (!axios.isAxiosError(error) || error.response?.status !== 401) return Promise.reject(error);
+
+    const { accessToken, refreshToken, clearTokenTuple } = useAuthStore.getState();
+
+    if (!refreshToken) {
+      clearTokenTuple();
+      return Promise.reject(error);
+    }
+
+    if (originalRequest._retry) {
+      clearTokenTuple();
+      return Promise.reject(error);
+    }
 
     originalRequest._retry = true;
 
-    const { refreshToken } = useAuthStore.getState();
-    if (!refreshToken) return Promise.reject(error);
+    try {
+      reactiveRefreshPromise ??= executeRefresh(refreshToken).finally(() => reactiveRefreshPromise = null);
+      await reactiveRefreshPromise;
+    } catch {
+      clearTokenTuple();
+      return Promise.reject(error);
+    }
 
-    reactiveRefreshPromise ??= executeRefresh(refreshToken)
-      .finally(() => { reactiveRefreshPromise = null; });
-
-    try { await reactiveRefreshPromise; }
-    catch { return Promise.reject(error); }
-
-    const { accessToken } = useAuthStore.getState();
-    if (!accessToken) return Promise.reject(error);
+    if (!accessToken) {
+      clearTokenTuple();
+      return Promise.reject(error);
+    }
 
     originalRequest.headers.Authorization = `Bearer ${accessToken}`;
     return endpoint(originalRequest);

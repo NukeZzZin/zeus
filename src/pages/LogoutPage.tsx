@@ -12,16 +12,13 @@ const LogoutPage = () => {
   const refreshToken = useAuthStore((state) => state.refreshToken);
 
   useEffect(() => {
-    const logout = async () => {
-      if (refreshToken) await routes.session.logout(refreshToken);
-      clearTokenTuple();
-      localStorage.removeItem("prometheus:auth");
-      navigate("/", { replace: true });
-    };
-    logout();
-  }, []);
+    if (refreshToken) routes.session.logout(refreshToken);
+    clearTokenTuple();
+    localStorage.removeItem("prometheus:auth");
+    navigate("/", { replace: true });
+  }, [refreshToken, clearTokenTuple, navigate]);
 
-  return <Loading/>
+  return <Loading />;
 };
 
 export default LogoutPage;
