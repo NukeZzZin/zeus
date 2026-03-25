@@ -21,8 +21,11 @@ const PostPage = () => {
       setError(null);
       const result = await routes.posts.get(id);
       setLoading(false);
-      if (result.success && result.data) setPost(result.data);
-      else setError(result.success ? "Unknown error" : result.errors.map(err => err.message).join(" "));
+      if (result.success && result.data) {
+        setPost(result.data);
+      } else {
+        setError(result.success ? "Unknown error" : result.errors.map(err => err.message).join(" "));
+      }
     };
     fetchPost();
   }, [id]);

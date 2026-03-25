@@ -39,7 +39,11 @@ let proactiveRefreshPromise: Promise<void> | null = null;
 endpoint.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   const { refreshToken, accessTokenExpiresAt, clearTokenTuple } = useAuthStore.getState();
   if (!!refreshToken && accessTokenExpiresAt !== null && accessTokenExpiresAt - Date.now() < 60_000) {
-    if (!proactiveRefreshPromise) proactiveRefreshPromise = executeRefresh(refreshToken).finally(() => proactiveRefreshPromise = null);
+    if (!proactiveRefreshPromise) {
+      proactiveRefreshPromise = executeRefresh(refreshToken).finally(() => {
+        proactiveRefreshPromise = null;
+      });
+    }
     try { await proactiveRefreshPromise }
     catch { clearTokenTuple() }
   }
@@ -53,7 +57,9 @@ endpoint.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config as RetryableRequestConfig;
+
     if (!axios.isAxiosError(error) || error.response?.status !== 401) return Promise.reject(error);
+
     const { accessToken, refreshToken, clearTokenTuple } = useAuthStore.getState();
 
     if (!refreshToken) {
