@@ -38,8 +38,12 @@ const CreatePostPage: React.FC = () => {
     if (result.success) {
       setSuccess("Post created successfully!");
       console.log(result.data?.post_id);
-      setTimeout(() => navigate(`/posts/${result.data?.post_id}`), 1200);
-    } else setErrors(result.errors.map((err) => err.message));
+      setTimeout(() => {
+        navigate(`/posts/${result.data?.post_id}`);
+      }, 1200);
+    } else {
+      setErrors(result.errors.map((err) => err.message));
+    }
   };
 
   return (
