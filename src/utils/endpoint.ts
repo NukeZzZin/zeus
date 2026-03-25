@@ -16,7 +16,7 @@ export type SessionResultType = { access_token: string; refresh_token: string };
 export type PostResultType = { post_id: string; title: string; content: string; author_id: string };
 
 export const endpoint = axios.create({
-  baseURL: "http://localhost:4000/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
   headers: { "Content-Type": "application/json" },
   timeout: 15_000
 })
