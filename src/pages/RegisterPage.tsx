@@ -58,45 +58,11 @@ const RegisterPage = () => {
         <Stack spacing={3}>
           <Typography variant="h5" align="center">Register</Typography>
           {errors.length > 0 && <Alert severity="error">{errors.join(" ")}</Alert>}
-          <TextField
-            label="Username"
-            variant="outlined"
-            fullWidth
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            required
-            autoFocus
-          />
-          <TextField
-            label="Display Name"
-            variant="outlined"
-            fullWidth
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            required
-          />
-          <TextField
-            label="Email"
-            type="email"
-            variant="outlined"
-            fullWidth
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
-          <TextField
-            label="Password"
-            type="password"
-            variant="outlined"
-            fullWidth
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            helperText="At least 6 characters"
-          />
-          <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading}>
-            {loading ? "Registering..." : "Register"}
-          </Button>
+          <TextField label="Username" variant="outlined" fullWidth value={username} onChange={(event) => setUsername(event.target.value)} required/>
+          <TextField label="Display Name" variant="outlined" fullWidth value={displayName} onChange={(event) => setDisplayName(event.target.value)} required/>
+          <TextField label="Email" type="email" variant="outlined" fullWidth value={email} onChange={(event) => setEmail(event.target.value)} required/>
+          <TextField label="Password" type="password" variant="outlined" fullWidth value={password} onChange={(event) => setPassword(event.target.value)} required helperText="At least 8 characters"/>
+          <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading}>{loading ? "Registering..." : "Register"}</Button>
         </Stack>
       </Box>
     </Box>

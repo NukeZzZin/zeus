@@ -21,11 +21,8 @@ const PostPage = () => {
       setError(null);
       const result = await routes.posts.get(id);
       setLoading(false);
-      if (result.success && result.data) {
-        setPost(result.data);
-      } else {
-        setError(result.success ? "Unknown error" : result.errors.map(err => err.message).join(" "));
-      }
+      if (result.success && result.data) setPost(result.data);
+      else setError(result.success ? "Unknown error" : result.errors.map(err => err.message).join(" "));
     };
     fetchPost();
   }, [id]);
@@ -33,26 +30,18 @@ const PostPage = () => {
   return (
     <Box display="flex" justifyContent="center" alignItems="flex-start" flex={1} minHeight="100vh" bgcolor="#f5f5f5" p={4}>
       <Box width="100%" maxWidth={600}>
-        {loading && (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-            <CircularProgress />
-          </Box>
-        )}
-        {error && (
-          <Alert severity="error">{error}</Alert>
-        )}
+        {loading && (<Box display="flex" justifyContent="center" alignItems="center" minHeight={200}><CircularProgress/></Box>)}
+        {error && (<Alert severity="error">{error}</Alert>)}
         {!loading && !error && post && (
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h5" gutterBottom>{post.title}</Typography>
               <Typography variant="body2" color="textSecondary" gutterBottom>Author ID: {post.author_id}</Typography>
-              <Typography variant="body1">{post.content}</Typography>
+              <Typography whiteSpace="pre-wrap" variant="body1">{post.content}</Typography>
             </CardContent>
           </Card>
         )}
-        {!loading && !error && !post && (
-          <Typography align="center" color="textSecondary">Post not found.</Typography>
-        )}
+        {!loading && !error && !post && (<Typography align="center" color="textSecondary">Post not found.</Typography>)}
       </Box>
     </Box>
   );

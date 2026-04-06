@@ -38,9 +38,7 @@ const CreatePostPage: React.FC = () => {
     if (result.success) {
       setSuccess("Post created successfully!");
       console.log(result.data?.post_id);
-      setTimeout(() => {
-        navigate(`/posts/${result.data?.post_id}`);
-      }, 1200);
+      setTimeout(() => navigate(`/posts/${result.data?.post_id}`), 1200);
     } else {
       setErrors(result.errors.map((err) => err.message));
     }
@@ -53,28 +51,9 @@ const CreatePostPage: React.FC = () => {
           <Typography variant="h5" align="center">Create Post</Typography>
           {errors.length > 0 && <Alert severity="error">{errors.join(" ")}</Alert>}
           {success && <Alert severity="success">{success}</Alert>}
-          <TextField
-            label="Title"
-            variant="outlined"
-            fullWidth
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            required
-            autoFocus
-          />
-          <TextField
-            label="Content"
-            variant="outlined"
-            fullWidth
-            multiline
-            minRows={4}
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            required
-          />
-          <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading}>
-            {loading ? <CircularProgress size={24} /> : "Create"}
-          </Button>
+          <TextField label="Title" variant="outlined" fullWidth value={title} onChange={(event) => setTitle(event.target.value)} required/>
+          <TextField label="Content" variant="outlined" fullWidth multiline minRows={4} value={content} onChange={(event) => setContent(event.target.value)} required/>
+          <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading}>{loading ? <CircularProgress size={24} /> : "Create"}</Button>
         </Stack>
       </Box>
     </Box>
