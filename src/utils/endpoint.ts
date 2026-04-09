@@ -16,8 +16,13 @@ export type SessionResultType = { access_token: string; refresh_token: string };
 export type PostResultType = { post_id: string; title: string; content: string; author_id: string };
 
 export const endpoint = axios.create({
+<<<<<<< HEAD
   baseURL: `${import.meta.env.VITE_API_URL}/api` || "http://localhost:4000/api",
   headers: { "Content-Type": "application/json" },
+=======
+  baseURL: `${import.meta.env.VITE_API_URL || "http://localhost:4000"}/api`,
+  headers: {"Content-Type": "application/json"},
+>>>>>>> sync
   timeout: 15_000
 })
 
@@ -26,6 +31,10 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig { _retry?: b
 const executeRefresh = async (refreshToken: string): Promise<void> => {
   const { setTokenTuple, clearTokenTuple } = useAuthStore.getState();
   const result = await routes.session.refresh(refreshToken);
+<<<<<<< HEAD
+=======
+
+>>>>>>> sync
   if (result.success && result.data) {
     setTokenTuple(result.data.access_token, result.data.refresh_token);
   } else {
@@ -34,6 +43,7 @@ const executeRefresh = async (refreshToken: string): Promise<void> => {
   }
 };
 
+<<<<<<< HEAD
 // TODO: fix deadlock proactiveRefresh.
 // let proactiveRefreshPromise: Promise<void> | null = null;
 
@@ -53,15 +63,21 @@ const executeRefresh = async (refreshToken: string): Promise<void> => {
 //   return config;
 // });
 
+=======
+>>>>>>> sync
 let reactiveRefreshPromise: Promise<void> | null = null;
 
 endpoint.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config as RetryableRequestConfig;
+<<<<<<< HEAD
 
     if (!axios.isAxiosError(error) || error.response?.status !== 401) return Promise.reject(error);
 
+=======
+    if (!axios.isAxiosError(error) || error.response?.status !== 401) return Promise.reject(error);
+>>>>>>> sync
     const { accessToken, refreshToken, clearTokenTuple } = useAuthStore.getState();
 
     if (!refreshToken) {
@@ -101,6 +117,7 @@ const unwrap = async <T>(promise: Promise<any>): Promise<EndpointResult<T>> => {
     return { success: true, data } as EndpointResult<T>;
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
+<<<<<<< HEAD
       const errors = error.response.data?.errors ??
         (error.response.data ?
           [{ code: error.response.status, message: error.response.data.message }] :
@@ -108,6 +125,15 @@ const unwrap = async <T>(promise: Promise<any>): Promise<EndpointResult<T>> => {
       return { success: false, errors } as EndpointResult<T>;
     }
     return { success: false, errors: [{ code: 500, message: "Internal server error" }] } as EndpointResult<T>;
+=======
+      const errors: InternalErrorType[] = error.response.data?.errors ??
+        (error.response.data
+          ? [{code: error.response.status, message: error.response.data.message}]
+          : [{code: error.response.status, message: "Unknown error"}]);
+      return {success: false, errors} as EndpointResult<T>;
+    }
+    return {success: false, errors: [{code: 500, message: "Internal server error"}]} as EndpointResult<T>;
+>>>>>>> sync
   }
 };
 
