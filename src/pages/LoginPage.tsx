@@ -47,33 +47,9 @@ const LoginPage = () => {
         <Stack spacing={3}>
           <Typography variant="h5" align="center">Login</Typography>
           {errors.length > 0 && <Alert severity="error">{errors.join(" ")}</Alert>}
-<<<<<<< HEAD
-          <TextField
-            label="Username or Email"
-            variant="outlined"
-            fullWidth
-            value={identifier}
-            onChange={(event) => setIdentifier(event.target.value)}
-            required
-            autoFocus
-          />
-          <TextField
-            label="Password"
-            variant="outlined"
-            type="password"
-            fullWidth
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-          <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
-          </Button>
-=======
           <TextField label="Username or Email" variant="outlined" fullWidth value={identifier} onChange={(event) => setIdentifier(event.target.value)} required/>
           <TextField label="Password" variant="outlined" type="password" fullWidth value={password} onChange={(event) => setPassword(event.target.value)} required/>
           <Button type="submit" variant="contained" color="primary" fullWidth disabled={loading}>{loading ? "Logging in..." : "Login"}</Button>
->>>>>>> sync
         </Stack>
       </Box>
     </Box>

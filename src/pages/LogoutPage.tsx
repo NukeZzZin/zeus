@@ -18,11 +18,7 @@ const LogoutPage = () => {
     navigate("/", { replace: true });
   }, [refreshToken, clearTokenTuple, navigate]);
 
-<<<<<<< HEAD
-  return <Loading />;
-=======
   return <Loading/>;
->>>>>>> sync
 };
 
 export default LogoutPage;

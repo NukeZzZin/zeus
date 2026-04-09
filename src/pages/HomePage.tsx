@@ -14,19 +14,9 @@ const HomePage = () => {
       setError(null);
       const result = await routes.posts.list();
       setLoading(false);
-<<<<<<< HEAD
-      if (result.success && Array.isArray(result.data)) {
-        setPosts(result.data);
-      } else if (result.success && !Array.isArray(result.data)) {
-        setPosts([]);
-      } else {
-        setError(result.success ? "Unknown error" : result.errors.map(event => event.message).join(" "));
-      }
-=======
       if (result.success && Array.isArray(result.data)) setPosts(result.data);
       else if (result.success && !Array.isArray(result.data)) setPosts([]);
       else setError(result.success ? "Unknown error" : result.errors.map(event => event.message).join(" "));
->>>>>>> sync
     };
     fetchPosts();
   }, []);
@@ -35,34 +25,16 @@ const HomePage = () => {
     <Box display="flex" justifyContent="center" alignItems="flex-start" flex={1} minHeight="100vh" bgcolor="#f5f5f5" p={4}>
       <Box width="100%" maxWidth={600}>
         <Typography variant="h4" mb={3} align="center">Posts</Typography>
-<<<<<<< HEAD
-        {loading && (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-            <CircularProgress />
-          </Box>
-        )}
-        {error && (
-          <Alert severity="error">{error}</Alert>
-        )}
-        {!loading && !error && posts.length === 0 && (
-          <Typography align="center" color="textSecondary">No posts found.</Typography>
-        )}
-=======
         {loading && (<Box display="flex" justifyContent="center" alignItems="center" minHeight={200}><CircularProgress/></Box>)}
         {error && (<Alert severity="error">{error}</Alert>)}
         {!loading && !error && posts.length === 0 && (<Typography align="center" color="textSecondary">No posts found.</Typography>)}
->>>>>>> sync
         <Stack spacing={2}>
           {posts.map((post, index) => (
             <Card key={index} variant="outlined">
               <CardContent>
                 <Typography variant="h6">{post.title}</Typography>
                 <Typography variant="body2" color="textSecondary" gutterBottom>Author ID: {post.author_id}</Typography>
-<<<<<<< HEAD
-                <Typography variant="body1">{post.content}</Typography>
-=======
                 <Typography whiteSpace="pre-wrap" variant="body1">{post.content}</Typography>
->>>>>>> sync
               </CardContent>
             </Card>
           ))}
